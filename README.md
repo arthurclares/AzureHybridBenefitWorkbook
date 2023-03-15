@@ -13,7 +13,7 @@ The Azure Hybrid Benefit Workbook provides a detailed overview of Windows VMs, L
 
 Use the following link to deploy the AHUB Workbook:
 
-   <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fgithub.com%2Farthurclares%2FAzureHybridBenefitWorkbook%2Fraw%2Fmain%2Fworkbook%2FAHUB%20Overview.workbook" target="_blank"><img src="https://aka.ms/deploytoazurebutton"/></a>
+   <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Farthurclares%2FAzureHybridBenefitWorkbook%2Fmain%2Fworkbook%2Fazuredeploy.json" target="_blank"><img src="https://aka.ms/deploytoazurebutton"/></a>
     
 ## Table of Contents
 - [Workbook Overview](#workbook-overview)
