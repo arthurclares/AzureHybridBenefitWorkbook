@@ -15,21 +15,10 @@
         "description": "The gallery that the workbook will been shown under. Supported values include workbook, tsg, etc. Usually, this is 'workbook'"
       }
     },
-    "workbookSourceId": {
-      "type": "string",
-      "defaultValue": "Azure Monitor",
-      "metadata": {
-        "description": "The id of resource instance to which the workbook will be associated"
-      }
-    },
-    "workbookId": {
-      "type": "string",
-      "defaultValue": "[newGuid()]",
-      "metadata": {
-        "description": "The unique guid for this workbook instance"
-      }
-    }
-  },
+"variables": {
+    "workbookSourceId": "your_workbook_source_id",
+    "workbookId": "[newGuid()]"
+  },    
    "resources": [
     {
         "type": "Microsoft.Insights/workbooks",
