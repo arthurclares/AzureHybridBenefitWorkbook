@@ -23,7 +23,7 @@
     {
         "type": "Microsoft.Insights/workbooks",
         "apiVersion": "2021-03-08",
-        "name": "[parameters('workbookId')]",
+        "name": "[variables('workbookId')]",
       "location": "[resourceGroup().location]",
       "apiVersion": "2022-04-01",
       "dependsOn": [],
@@ -40,7 +40,7 @@
     "outputs": {
       "workbookId": {
         "type": "string",
-        "value": "[resourceId('Microsoft.Insights/workbooks', parameters('workbookId'))]"
+        "value": "[resourceId('Microsoft.Insights/workbooks', variables('workbookId'))]"
     }
   },
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#"
