@@ -66,7 +66,8 @@
                   },
                   "defaultValue": "value::1",
                   "queryType": 1,
-                  "resourceType": "microsoft.resourcegraph/resources"
+                  "resourceType": "microsoft.resourcegraph/resources",
+                  "value": "uksouth"
                 },
                 {
                   "id": "2336f06b-ddaa-4a9e-b72f-a2bec1ea84a9",
@@ -4957,6 +4958,8 @@
         "version": "NotebookGroup/1.0",
         "groupType": "editable",
         "title": "Linux Hybrid Benefit",
+        "loadType": "explicit",
+        "loadButtonText": "Load Linux Recommendations",
         "items": [
           {
             "type": 1,
@@ -4969,23 +4972,22 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "resources \r\n| where resourceGroup in ({ResourceGroup})\r\n| where type =~ 'microsoft.compute/virtualmachines' and (properties.storageProfile.imageReference.publisher == 'suse' or properties.storageProfile.imageReference.publisher=='RedHat')\r\n| where isnotnull ((properties.['licenseType']))\r\n| extend LinuxId=id, VMName=name, VMLocation=location, VMRG=resourceGroup, OSType=tostring(properties.storageProfile.imageReference.publisher), OsVersion = tostring(properties.storageProfile.imageReference.sku), VMSize=tostring (properties.hardwareProfile.vmSize), LicenseType = tostring(properties.['licenseType']), VMSSize=tostring(sku.name)\r\n| order by type asc \r\n| project LinuxId,VMName,VMRG,VMSize, VMSSize, VMLocation,OSType, OsVersion,LicenseType",
+              "query": "{\"version\":\"ARMEndpoint/1.0\",\"data\":null,\"headers\":[],\"method\":\"GET\",\"path\":\"/subscriptions/{SingleSubHidden}/providers/Microsoft.Compute/skus?$filter=location eq '{Location}'\",\"urlParams\":[{\"key\":\"api-version\",\"value\":\"2021-07-01\"}],\"batchDisabled\":false,\"transformers\":[{\"type\":\"jsonpath\",\"settings\":{\"tablePath\":\"$.*[?(@.resourceType=='virtualMachines')]\",\"columns\":[{\"path\":\"name\",\"columnid\":\"Name\"},{\"path\":\"capabilities[?(@.name=='vCPUs')].value\",\"columnid\":\"vCPUs\"},{\"path\":\"capabilities[?(@.name=='MemoryGB')].value\",\"columnid\":\"MemoryGB\"},{\"path\":\"capabilities[?(@.name=='MaxNetworkInterfaces')].value\",\"columnid\":\"MaxNetworkInterfaces\"},{\"path\":\"capabilities[?(@.name=='HyperVGenerations')].value\",\"columnid\":\"HyperVGenerations\"},{\"path\":\"capabilities[?(@.name=='vCPUsPerCore')].value\",\"columnid\":\"vCPUsPerCore\"}]}}]}",
               "size": 0,
-              "title": "AHUB Enabled",
-              "noDataMessage": "None of your Linux VMs have AHUB enabled.",
-              "noDataMessageStyle": 4,
-              "queryType": 1,
-              "resourceType": "microsoft.resourcegraph/resources",
-              "crossComponentResources": [
-                "{Subscription}"
-              ]
+              "title": "Get VM vCPU",
+              "exportParameterName": "ResourceSKU",
+              "showExportToExcel": true,
+              "queryType": 12,
+              "gridSettings": {
+                "rowLimit": 5000
+              }
             },
             "conditionalVisibility": {
               "parameterName": "AlwaysHidden",
               "comparison": "isEqualTo",
               "value": "true"
             },
-            "name": "LinuxAHUBEnabled"
+            "name": "API-Get_VMLinux_SKU"
           },
           {
             "type": 3,
@@ -5008,6 +5010,28 @@
               "value": "true"
             },
             "name": "LinuxAHUBDisabled"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "resources \r\n| where resourceGroup in ({ResourceGroup})\r\n| where type =~ 'microsoft.compute/virtualmachines' and (properties.storageProfile.imageReference.publisher == 'suse' or properties.storageProfile.imageReference.publisher=='RedHat')\r\n| where isnotnull ((properties.['licenseType']))\r\n| extend LinuxId=id, VMName=name, VMLocation=location, VMRG=resourceGroup, OSType=tostring(properties.storageProfile.imageReference.publisher), OsVersion = tostring(properties.storageProfile.imageReference.sku), VMSize=tostring (properties.hardwareProfile.vmSize), LicenseType = tostring(properties.['licenseType']), VMSSize=tostring(sku.name)\r\n| order by type asc \r\n| project LinuxId,VMName,VMRG,VMSize, VMSSize, VMLocation,OSType, OsVersion,LicenseType",
+              "size": 0,
+              "title": "AHUB Enabled",
+              "noDataMessage": "All of your Linux VMs have AHUB enabled.",
+              "noDataMessageStyle": 3,
+              "queryType": 1,
+              "resourceType": "microsoft.resourcegraph/resources",
+              "crossComponentResources": [
+                "{Subscription}"
+              ]
+            },
+            "conditionalVisibility": {
+              "parameterName": "AlwaysHidden",
+              "comparison": "isEqualTo",
+              "value": "true"
+            },
+            "name": "LinuxAHUBRGEnabled"
           },
           {
             "type": 3,
@@ -5065,7 +5089,8 @@
                   "jsonData": "[\r\n    {\"value\":\"Yes\"},\r\n    {\"value\":\"No\", \"selected\":true}\r\n]\r\n\r\n",
                   "timeContext": {
                     "durationMs": 86400000
-                  }
+                  },
+                  "value": "Yes"
                 },
                 {
                   "id": "439c7c8d-4119-4328-b4ca-2b1e676ede28",
@@ -5123,7 +5148,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\",\"mergeType\":\"inner\",\"leftTable\":\"LinuxAHUBEnabled\",\"rightTable\":\"API-Get_VM_SKU\",\"leftColumn\":\"VMSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[LinuxAHUBEnabled].LinuxId\",\"mergedName\":\"VM Name\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBEnabled].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBEnabled].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBEnabled].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBEnabled].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBEnabled].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBEnabled].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBEnabled].VMName\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\"},{\"originalName\":\"[API-Get_VM_SKU].Name\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\"},{\"originalName\":\"[LinuxAHUBEnabled].VMSSize\"}]}",
+              "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\",\"mergeType\":\"inner\",\"leftTable\":\"LinuxAHUBRGEnabled\",\"rightTable\":\"API-Get_VMLinux_SKU\",\"leftColumn\":\"VMSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[LinuxAHUBRGEnabled].LinuxId\",\"mergedName\":\"VM ID\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBRGEnabled].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBRGEnabled].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VMLinux_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBRGEnabled].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBRGEnabled].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBRGEnabled].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBRGEnabled].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VMLinux_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VMLinux_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VMLinux_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VMLinux_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VMLinux_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBEnabled].VMName\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\"},{\"originalName\":\"[API-Get_VM_SKU].Name\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\"},{\"originalName\":\"[LinuxAHUBEnabled].VMSSize\"},{\"originalName\":\"[LinuxAHUBRGEnabled].VMName\"},{\"originalName\":\"[LinuxAHUBRGEnabled].VMSSize\"}]}",
               "size": 0,
               "title": "Linux VMs with AHUB",
               "noDataMessage": "None of your Linux VMs have AHUB enabled",
@@ -5220,7 +5245,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\",\"mergeType\":\"inner\",\"leftTable\":\"LinuxAHUBDisabled\",\"rightTable\":\"API-Get_VM_SKU\",\"leftColumn\":\"VMSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[LinuxAHUBDisabled].LinuxId\",\"mergedName\":\"LinuxId\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VM_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBEnabled].VMName\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\"},{\"originalName\":\"[API-Get_VM_SKU].Name\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\"},{\"originalName\":\"[LinuxAHUBEnabled].VMSSize\"}]}",
+              "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\",\"mergeType\":\"inner\",\"leftTable\":\"LinuxAHUBDisabled\",\"rightTable\":\"API-Get_VMLinux_SKU\",\"leftColumn\":\"VMSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[LinuxAHUBDisabled].LinuxId\",\"mergedName\":\"LinuxId\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBDisabled].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VMLinux_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VMLinux_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VMLinux_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VMLinux_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VMLinux_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[API-Get_VMLinux_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"8a27a7d8-5ea8-4408-ac20-2fc4e65ca095\"},{\"originalName\":\"[LinuxAHUBEnabled].VMName\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\"},{\"originalName\":\"[API-Get_VM_SKU].Name\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\"},{\"originalName\":\"[LinuxAHUBEnabled].VMSSize\"}]}",
               "size": 0,
               "title": "Linux VMs without AHUB",
               "noDataMessage": "None of your Linux VMs have AHUB enabled",
@@ -5305,9 +5330,10 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"d8deb22b-a596-43ee-acc4-180849d26168\",\"mergeType\":\"inner\",\"leftTable\":\"Linux VM Latest Change Last 7 days\",\"rightTable\":\"Linux-VM+SKU+vCores-AHUB\",\"leftColumn\":\"VMID\",\"rightColumn\":\"VM Name\"}],\"projectRename\":[{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].VM Name\",\"mergedName\":\"VM Name\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux VM Latest Change Last 7 days].NewLicense\",\"mergedName\":\"NewLicense\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux VM Latest Change Last 7 days].DateofChange\",\"mergedName\":\"DateofChange\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux VM Latest Change Last 7 days].VMID\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].vCPUs\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].OSType\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].OsVersion\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].LicenseType\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].vCPUsPerCore\"}]}",
+              "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"d8deb22b-a596-43ee-acc4-180849d26168\",\"mergeType\":\"inner\",\"leftTable\":\"Linux VM Latest Change Last 7 days\",\"rightTable\":\"Linux-VM+SKU+vCores-AHUB\",\"leftColumn\":\"VMID\",\"rightColumn\":\"VM ID\"}],\"projectRename\":[{\"originalName\":\"[Linux VM Latest Change Last 7 days].VMID\",\"mergedName\":\"VMID\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux VM Latest Change Last 7 days].NewLicense\",\"mergedName\":\"NewLicense\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux VM Latest Change Last 7 days].DateofChange\",\"mergedName\":\"DateofChange\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].VM ID\",\"mergedName\":\"VM ID\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].Name\",\"mergedName\":\"Name\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26168\"},{\"originalName\":\"[Linux VM Latest Change Last 7 days].VMID\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].vCPUs\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].OSType\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].OsVersion\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].LicenseType\"},{\"originalName\":\"[Linux-VM+SKU+vCores-AHUB].vCPUsPerCore\"}]}",
               "size": 0,
               "title": "Linux Total Cores Enabled last 7 Days",
+              "noDataMessage": "There wasn't any Linux AHUB was enabled in the last 7 days.",
               "showExportToExcel": true,
               "queryType": 7,
               "visualization": "table",
@@ -5377,6 +5403,8 @@
         "version": "NotebookGroup/1.0",
         "groupType": "editable",
         "title": "Linux Hybrid Benefit",
+        "loadType": "explicit",
+        "loadButtonText": "Load Linux Recommendations",
         "items": [
           {
             "type": 1,
@@ -5800,7 +5828,24 @@
         "version": "NotebookGroup/1.0",
         "groupType": "editable",
         "title": "VMSS",
+        "loadType": "explicit",
+        "loadButtonText": "Load VMSS Recommendations",
         "items": [
+          {
+            "type": 1,
+            "content": {
+              "json": "## Windows Azure Hybrid Benefit (AHUB) Overview - VM Scale Set"
+            },
+            "name": "text - 3"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "Each two-processor license or each set of 16-core licenses, either Datacenter or Standard editions, are entitled to two instances of up to 8 cores, or one instance of up to 16 cores.\r\n\r\nThe virtual machines (VMs) with less than 8 cores are categorized as **Low Priority**, while those with 8 or more cores are classified as **High Priority**. In situations where there are insufficient Azure Hybrid benefit licenses to cover all the VMs in the environment, it is recommended to prioritize the High Priority VMs.",
+              "style": "info"
+            },
+            "name": "text - 4"
+          },
           {
             "type": 3,
             "content": {
@@ -5841,19 +5886,25 @@
             "name": "VMSSAHUBEnabled-Tag"
           },
           {
-            "type": 1,
+            "type": 3,
             "content": {
-              "json": "## Windows Azure Hybrid Benefit (AHUB) Overview - VM Scale Set"
+              "version": "KqlItem/1.0",
+              "query": "{\"version\":\"ARMEndpoint/1.0\",\"data\":null,\"headers\":[],\"method\":\"GET\",\"path\":\"/subscriptions/{SingleSubHidden}/providers/Microsoft.Compute/skus?$filter=location eq '{Location}'\",\"urlParams\":[{\"key\":\"api-version\",\"value\":\"2021-07-01\"}],\"batchDisabled\":false,\"transformers\":[{\"type\":\"jsonpath\",\"settings\":{\"tablePath\":\"$.*[?(@.resourceType=='virtualMachines')]\",\"columns\":[{\"path\":\"name\",\"columnid\":\"Name\"},{\"path\":\"capabilities[?(@.name=='vCPUs')].value\",\"columnid\":\"vCPUs\"},{\"path\":\"capabilities[?(@.name=='MemoryGB')].value\",\"columnid\":\"MemoryGB\"},{\"path\":\"capabilities[?(@.name=='MaxNetworkInterfaces')].value\",\"columnid\":\"MaxNetworkInterfaces\"},{\"path\":\"capabilities[?(@.name=='HyperVGenerations')].value\",\"columnid\":\"HyperVGenerations\"},{\"path\":\"capabilities[?(@.name=='vCPUsPerCore')].value\",\"columnid\":\"vCPUsPerCore\"}]}}]}",
+              "size": 0,
+              "title": "Get VM vCPU",
+              "exportParameterName": "ResourceSKU",
+              "showExportToExcel": true,
+              "queryType": 12,
+              "gridSettings": {
+                "rowLimit": 5000
+              }
             },
-            "name": "text - 3"
-          },
-          {
-            "type": 1,
-            "content": {
-              "json": "Each two-processor license or each set of 16-core licenses, either Datacenter or Standard editions, are entitled to two instances of up to 8 cores, or one instance of up to 16 cores.\r\n\r\nThe virtual machines (VMs) with less than 8 cores are categorized as **Low Priority**, while those with 8 or more cores are classified as **High Priority**. In situations where there are insufficient Azure Hybrid benefit licenses to cover all the VMs in the environment, it is recommended to prioritize the High Priority VMs.",
-              "style": "info"
+            "conditionalVisibility": {
+              "parameterName": "AlwaysHidden",
+              "comparison": "isEqualTo",
+              "value": "true"
             },
-            "name": "text - 4"
+            "name": "API-Get_VMSS_SKU"
           },
           {
             "type": 1,
@@ -5874,362 +5925,882 @@
             "name": "text - 7"
           },
           {
-            "type": 3,
+            "type": 12,
             "content": {
-              "version": "KqlItem/1.0",
-              "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"50d79765-aad4-437e-a90b-8cc7865e7081\",\"mergeType\":\"inner\",\"leftTable\":\"VMSSAHUBEnabled-Tag\",\"rightTable\":\"API-Get_VM_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[Added column]\",\"mergedName\":\"Prioritize AHUB?\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\">=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"\\\"High Priority\\\"\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\"\\\"Low Priority\\\"\"}}]},{\"originalName\":\"[Added column]\",\"mergedName\":\"Consumed Cores per VM\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\"<=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"8\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\" ([\\\"vCPUs\\\"] + 7) & ~7\"}}]},{\"originalName\":\"[WindowsAHUBEnabled].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].WindowsId\",\"mergedName\":\"WindowsId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSVersion\",\"mergedName\":\"OSVersion\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[WindowsAHUBEnabled].WindowsId\"},{\"originalName\":\"[WindowsAHUBEnabled].VMRG\"},{\"originalName\":\"[WindowsAHUBEnabled].VMLocation\"},{\"originalName\":\"[WindowsAHUBEnabled].OSType\"},{\"originalName\":\"[WindowsAHUBEnabled].OsVersion\"},{\"originalName\":\"[WindowsAHUBEnabled].LicenseType\"},{\"originalName\":\"[query - Get VM vCPU].Name\"},{\"originalName\":\"[query - Get VM vCPU].MemoryGB\"},{\"originalName\":\"[query - Get VM vCPU].MaxNetworkInterfaces\"},{\"originalName\":\"[query - Get VM vCPU].HyperVGenerations\"},{\"originalName\":\"[query - Get VM vCPU].vCPUsPerCore\"},{\"originalName\":\"[WindowsAHUBEnabled].VMSSize\"}]}",
-              "size": 0,
-              "title": "Consumed Cores per AHUB Priority",
-              "noDataMessage": "None of your VMs have AHUB enabled",
-              "noDataMessageStyle": 4,
-              "queryType": 7,
-              "visualization": "piechart",
-              "gridSettings": {
-                "formatters": [
-                  {
-                    "columnMatch": "Prioritize AHUB?",
-                    "formatter": 18,
-                    "formatOptions": {
-                      "thresholdsOptions": "icons",
-                      "thresholdsGrid": [
-                        {
-                          "operator": "==",
-                          "thresholdValue": "High Priority",
-                          "representation": "Sev0",
-                          "text": "{0}{1}"
-                        },
-                        {
-                          "operator": "Default",
-                          "thresholdValue": null,
-                          "representation": "Sev4",
-                          "text": "{0}{1}"
-                        }
-                      ]
-                    },
-                    "numberFormat": {
-                      "unit": 17,
-                      "options": {
-                        "style": "decimal"
-                      }
-                    }
-                  }
-                ]
-              }
-            },
-            "customWidth": "33",
-            "name": "Consumed Cores per AHUB Priority"
-          },
-          {
-            "type": 3,
-            "content": {
-              "version": "KqlItem/1.0",
-              "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"d8deb22b-a596-43ee-acc4-180849d26130\",\"mergeType\":\"inner\",\"leftTable\":\"VMSSAHUBEnabled-Tag\",\"rightTable\":\"API-Get_VM_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[Added column]\",\"mergedName\":\"ConsumedCores\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\"<=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"8\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\"([\\\"vCPUs\\\"] + 7) & ~7\"}}]},{\"originalName\":\"[WindowsAHUBEnabled].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].WindowsId\",\"mergedName\":\"WindowsId\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSVersion\",\"mergedName\":\"OSVersion\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VM_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"}]}",
-              "size": 0,
-              "title": "Consumed Cores per VMSS",
-              "queryType": 7,
-              "visualization": "piechart",
-              "gridSettings": {
-                "formatters": [
-                  {
-                    "columnMatch": "ConsumedCores",
-                    "formatter": 0,
-                    "formatOptions": {
-                      "aggregation": "Sum"
-                    }
-                  }
-                ]
-              },
-              "tileSettings": {
-                "titleContent": {},
-                "leftContent": {
-                  "columnMatch": "ConsumedCores",
-                  "formatter": 12,
-                  "formatOptions": {
-                    "palette": "blue"
-                  }
-                },
-                "showBorder": false
-              },
-              "graphSettings": {
-                "type": 0
-              },
-              "chartSettings": {
-                "yAxis": [
-                  "ConsumedCores"
-                ],
-                "group": "VMName",
-                "createOtherGroup": null
-              }
-            },
-            "customWidth": "33",
-            "name": "Consumed Cores per VMSS"
-          },
-          {
-            "type": 3,
-            "content": {
-              "version": "KqlItem/1.0",
-              "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"50d79765-aad4-437e-a90b-8cc7865e7081\",\"mergeType\":\"inner\",\"leftTable\":\"VMSSAHUBEnabled-Tag\",\"rightTable\":\"API-Get_VM_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[Added column]\",\"mergedName\":\"Prioritize AHUB?\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\">=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"\\\"High Priority\\\"\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\"\\\"Low Priority\\\"\"}}]},{\"originalName\":\"[Added column]\",\"mergedName\":\"Consumed Cores per VM\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\"<=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"8\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\" ([\\\"vCPUs\\\"] + 7) & ~7\"}}]},{\"originalName\":\"[query - 0].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].WindowsId\",\"mergedName\":\"WindowsId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSVersion\",\"mergedName\":\"OSVersion\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[WindowsAHUBEnabled].WindowsId\"},{\"originalName\":\"[WindowsAHUBEnabled].VMRG\"},{\"originalName\":\"[WindowsAHUBEnabled].VMLocation\"},{\"originalName\":\"[WindowsAHUBEnabled].OSType\"},{\"originalName\":\"[WindowsAHUBEnabled].OsVersion\"},{\"originalName\":\"[WindowsAHUBEnabled].LicenseType\"},{\"originalName\":\"[query - Get VM vCPU].Name\"},{\"originalName\":\"[query - Get VM vCPU].MemoryGB\"},{\"originalName\":\"[query - Get VM vCPU].MaxNetworkInterfaces\"},{\"originalName\":\"[query - Get VM vCPU].HyperVGenerations\"},{\"originalName\":\"[query - Get VM vCPU].vCPUsPerCore\"},{\"originalName\":\"[WindowsAHUBEnabled].VMSSize\"}]}",
-              "size": 0,
-              "title": "Cores not enabled per AHUB Priority",
-              "noDataMessage": "All of your VMs have AHUB enabled",
-              "noDataMessageStyle": 4,
-              "queryType": 7,
-              "visualization": "piechart",
-              "gridSettings": {
-                "formatters": [
-                  {
-                    "columnMatch": "Prioritize AHUB?",
-                    "formatter": 18,
-                    "formatOptions": {
-                      "thresholdsOptions": "icons",
-                      "thresholdsGrid": [
-                        {
-                          "operator": "==",
-                          "thresholdValue": "High Priority",
-                          "representation": "Sev0",
-                          "text": "{0}{1}"
-                        },
-                        {
-                          "operator": "Default",
-                          "thresholdValue": null,
-                          "representation": "Sev4",
-                          "text": "{0}{1}"
-                        }
-                      ]
-                    },
-                    "numberFormat": {
-                      "unit": 17,
-                      "options": {
-                        "style": "decimal"
-                      }
-                    }
-                  }
-                ]
-              },
-              "chartSettings": {
-                "yAxis": [
-                  "Consumed Cores per VM"
-                ],
-                "group": "Prioritize AHUB?",
-                "createOtherGroup": null
-              }
-            },
-            "customWidth": "33",
-            "name": "Cores NOT enabled per AHUB Priority"
-          },
-          {
-            "type": 9,
-            "content": {
-              "version": "KqlParameterItem/1.0",
-              "parameters": [
+              "version": "NotebookGroup/1.0",
+              "groupType": "editable",
+              "loadType": "explicit",
+              "loadButtonText": "Load VMSS Info",
+              "items": [
                 {
-                  "id": "ae5e8765-47ef-46a6-803b-6b7124c098d2",
-                  "version": "KqlParameterItem/1.0",
-                  "name": "VMSSAHUBEnabled",
-                  "label": "See VMSS with AHUB",
-                  "type": 2,
-                  "isRequired": true,
-                  "typeSettings": {
-                    "additionalResourceOptions": [],
-                    "showDefault": false
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"50d79765-aad4-437e-a90b-8cc7865e7081\",\"mergeType\":\"inner\",\"leftTable\":\"VMSSAHUBEnabled-Tag\",\"rightTable\":\"API-Get_VMSS_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[Added column]\",\"mergedName\":\"Prioritize AHUB?\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\">=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"\\\"High Priority\\\"\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\"\\\"Low Priority\\\"\"}}]},{\"originalName\":\"[Added column]\",\"mergedName\":\"Consumed Cores per VM\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\"<=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"8\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\" ([\\\"vCPUs\\\"] + 7) & ~7\"}}]},{\"originalName\":\"[query - 0].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].WindowsId\",\"mergedName\":\"WindowsId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSVersion\",\"mergedName\":\"OSVersion\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[WindowsAHUBEnabled].WindowsId\"},{\"originalName\":\"[WindowsAHUBEnabled].VMRG\"},{\"originalName\":\"[WindowsAHUBEnabled].VMLocation\"},{\"originalName\":\"[WindowsAHUBEnabled].OSType\"},{\"originalName\":\"[WindowsAHUBEnabled].OsVersion\"},{\"originalName\":\"[WindowsAHUBEnabled].LicenseType\"},{\"originalName\":\"[query - Get VM vCPU].Name\"},{\"originalName\":\"[query - Get VM vCPU].MemoryGB\"},{\"originalName\":\"[query - Get VM vCPU].MaxNetworkInterfaces\"},{\"originalName\":\"[query - Get VM vCPU].HyperVGenerations\"},{\"originalName\":\"[query - Get VM vCPU].vCPUsPerCore\"},{\"originalName\":\"[WindowsAHUBEnabled].VMSSize\"}]}",
+                    "size": 0,
+                    "title": "Cores not enabled per AHUB Priority",
+                    "noDataMessage": "All of your VMs have AHUB enabled",
+                    "noDataMessageStyle": 4,
+                    "queryType": 7,
+                    "visualization": "piechart",
+                    "gridSettings": {
+                      "formatters": [
+                        {
+                          "columnMatch": "Prioritize AHUB?",
+                          "formatter": 18,
+                          "formatOptions": {
+                            "thresholdsOptions": "icons",
+                            "thresholdsGrid": [
+                              {
+                                "operator": "==",
+                                "thresholdValue": "High Priority",
+                                "representation": "Sev0",
+                                "text": "{0}{1}"
+                              },
+                              {
+                                "operator": "Default",
+                                "thresholdValue": null,
+                                "representation": "Sev4",
+                                "text": "{0}{1}"
+                              }
+                            ]
+                          },
+                          "numberFormat": {
+                            "unit": 17,
+                            "options": {
+                              "style": "decimal"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "chartSettings": {
+                      "yAxis": [
+                        "Consumed Cores per VM"
+                      ],
+                      "group": "Prioritize AHUB?",
+                      "createOtherGroup": null
+                    }
                   },
-                  "jsonData": "[\r\n    {\"value\":\"Yes\"},\r\n    {\"value\":\"No\", \"selected\":true}\r\n]\r\n\r\n",
-                  "timeContext": {
-                    "durationMs": 86400000
-                  },
-                  "value": "Yes"
+                  "customWidth": "33",
+                  "name": "Cores NOT enabled per AHUB Priority"
                 },
                 {
-                  "id": "f1ac5e53-253c-4afb-8bc5-b1ba2efea3eb",
-                  "version": "KqlParameterItem/1.0",
-                  "name": "VMSSAHUBDisabled",
-                  "label": "See VMSS without AHUB",
-                  "type": 2,
-                  "isRequired": true,
-                  "typeSettings": {
-                    "additionalResourceOptions": [],
-                    "showDefault": false
-                  },
-                  "jsonData": "[\r\n    {\"value\":\"Yes\"},\r\n    {\"value\":\"No\", \"selected\":true}\r\n]\r\n\r\n",
-                  "value": "Yes"
-                }
-              ],
-              "style": "pills",
-              "queryType": 0,
-              "resourceType": "microsoft.operationalinsights/workspaces"
-            },
-            "name": "parameters - 13"
-          },
-          {
-            "type": 3,
-            "content": {
-              "version": "KqlItem/1.0",
-              "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"50d79765-aad4-437e-a90b-8cc7865e7081\",\"mergeType\":\"inner\",\"leftTable\":\"VMSSAHUBEnabled-Tag\",\"rightTable\":\"API-Get_VM_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[WindowsAHUBEnabled].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[Added column]\",\"mergedName\":\"Prioritize AHUB?\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\">=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"static\",\"resultVal\":\"High Priority\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"static\",\"resultVal\":\"Low Priority\"}}]},{\"originalName\":\"[Added column]\",\"mergedName\":\"Consumed Cores per VM\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\"<=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"8\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\"([\\\"vCPUs\\\"] + 7) & ~7\"}}]},{\"originalName\":\"[VMSSAHUBEnabled-Tag].WindowsId\",\"mergedName\":\"VMSS Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSVersion\",\"mergedName\":\"OSVersion\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[query - 0].VMName\"},{\"originalName\":\"[query - 0].VMSSize\"},{\"originalName\":\"[query - Get VM vCPU].Name\"},{\"originalName\":\"[query - Get VM vCPU].MemoryGB\"},{\"originalName\":\"[query - Get VM vCPU].MaxNetworkInterfaces\"},{\"originalName\":\"[query - Get VM vCPU].HyperVGenerations\"},{\"originalName\":\"[query - Get VM vCPU].vCPUsPerCore\"},{\"originalName\":\"[WindowsAHUBEnabled].VMSSize\"},{\"originalName\":\"[WindowsAHUBEnabled].VMName\"},{\"originalName\":\"[VMSSAHUBEnabled].VMSize\"},{\"originalName\":\"[VMSSAHUBEnabled].VMName\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMName\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSize\"}]}",
-              "size": 0,
-              "title": "VMSS with AHUB",
-              "noDataMessage": "None of your VMSS have AHUB enabled",
-              "noDataMessageStyle": 4,
-              "showExportToExcel": true,
-              "queryType": 7,
-              "gridSettings": {
-                "formatters": [
-                  {
-                    "columnMatch": "$gen_group",
-                    "formatter": 15,
-                    "formatOptions": {
-                      "linkTarget": null,
-                      "showIcon": true
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"50d79765-aad4-437e-a90b-8cc7865e7081\",\"mergeType\":\"inner\",\"leftTable\":\"VMSSAHUBEnabled-Tag\",\"rightTable\":\"API-Get_VMSS_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[Added column]\",\"mergedName\":\"Prioritize AHUB?\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\">=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"\\\"High Priority\\\"\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\"\\\"Low Priority\\\"\"}}]},{\"originalName\":\"[Added column]\",\"mergedName\":\"Consumed Cores per VM\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\"<=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"8\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\" ([\\\"vCPUs\\\"] + 7) & ~7\"}}]},{\"originalName\":\"[WindowsAHUBEnabled].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].WindowsId\",\"mergedName\":\"WindowsId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSVersion\",\"mergedName\":\"OSVersion\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[WindowsAHUBEnabled].WindowsId\"},{\"originalName\":\"[WindowsAHUBEnabled].VMRG\"},{\"originalName\":\"[WindowsAHUBEnabled].VMLocation\"},{\"originalName\":\"[WindowsAHUBEnabled].OSType\"},{\"originalName\":\"[WindowsAHUBEnabled].OsVersion\"},{\"originalName\":\"[WindowsAHUBEnabled].LicenseType\"},{\"originalName\":\"[query - Get VM vCPU].Name\"},{\"originalName\":\"[query - Get VM vCPU].MemoryGB\"},{\"originalName\":\"[query - Get VM vCPU].MaxNetworkInterfaces\"},{\"originalName\":\"[query - Get VM vCPU].HyperVGenerations\"},{\"originalName\":\"[query - Get VM vCPU].vCPUsPerCore\"},{\"originalName\":\"[WindowsAHUBEnabled].VMSSize\"}]}",
+                    "size": 0,
+                    "title": "Consumed Cores per AHUB Priority",
+                    "noDataMessage": "None of your VMs have AHUB enabled",
+                    "noDataMessageStyle": 4,
+                    "queryType": 7,
+                    "visualization": "piechart",
+                    "gridSettings": {
+                      "formatters": [
+                        {
+                          "columnMatch": "Prioritize AHUB?",
+                          "formatter": 18,
+                          "formatOptions": {
+                            "thresholdsOptions": "icons",
+                            "thresholdsGrid": [
+                              {
+                                "operator": "==",
+                                "thresholdValue": "High Priority",
+                                "representation": "Sev0",
+                                "text": "{0}{1}"
+                              },
+                              {
+                                "operator": "Default",
+                                "thresholdValue": null,
+                                "representation": "Sev4",
+                                "text": "{0}{1}"
+                              }
+                            ]
+                          },
+                          "numberFormat": {
+                            "unit": 17,
+                            "options": {
+                              "style": "decimal"
+                            }
+                          }
+                        }
+                      ]
                     }
                   },
-                  {
-                    "columnMatch": "Group",
-                    "formatter": 15,
-                    "formatOptions": {
-                      "linkTarget": null,
-                      "showIcon": true
-                    }
-                  },
-                  {
-                    "columnMatch": "Prioritize AHUB?",
-                    "formatter": 18,
-                    "formatOptions": {
-                      "thresholdsOptions": "icons",
-                      "thresholdsGrid": [
+                  "customWidth": "33",
+                  "name": "Consumed Cores per AHUB Priority"
+                },
+                {
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"d8deb22b-a596-43ee-acc4-180849d26130\",\"mergeType\":\"inner\",\"leftTable\":\"VMSSAHUBEnabled-Tag\",\"rightTable\":\"API-Get_VMSS_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[Added column]\",\"mergedName\":\"ConsumedCores\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\"<=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"8\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\"([\\\"vCPUs\\\"] + 7) & ~7\"}}]},{\"originalName\":\"[WindowsAHUBEnabled].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].WindowsId\",\"mergedName\":\"WindowsId\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSVersion\",\"mergedName\":\"OSVersion\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VMSS_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VMSS_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VMSS_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VMSS_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VMSS_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VMSS_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"}]}",
+                    "size": 0,
+                    "title": "Consumed Cores per VMSS",
+                    "queryType": 7,
+                    "visualization": "piechart",
+                    "gridSettings": {
+                      "formatters": [
                         {
-                          "operator": "==",
-                          "thresholdValue": "High Priority",
-                          "representation": "Sev0",
-                          "text": "{0}{1}"
-                        },
-                        {
-                          "operator": "Default",
-                          "thresholdValue": null,
-                          "representation": "2",
-                          "text": "{0}{1}"
+                          "columnMatch": "ConsumedCores",
+                          "formatter": 0,
+                          "formatOptions": {
+                            "aggregation": "Sum"
+                          }
                         }
                       ]
                     },
-                    "numberFormat": {
-                      "unit": 17,
-                      "options": {
-                        "style": "decimal"
-                      }
+                    "tileSettings": {
+                      "titleContent": {},
+                      "leftContent": {
+                        "columnMatch": "ConsumedCores",
+                        "formatter": 12,
+                        "formatOptions": {
+                          "palette": "blue"
+                        }
+                      },
+                      "showBorder": false
+                    },
+                    "graphSettings": {
+                      "type": 0
+                    },
+                    "chartSettings": {
+                      "yAxis": [
+                        "ConsumedCores"
+                      ],
+                      "group": "VMName",
+                      "createOtherGroup": null
                     }
                   },
-                  {
-                    "columnMatch": "subscriptionId",
-                    "formatter": 15,
-                    "formatOptions": {
-                      "linkTarget": null,
-                      "showIcon": true
-                    }
-                  },
-                  {
-                    "columnMatch": "Subscription Name",
-                    "formatter": 15,
-                    "formatOptions": {
-                      "linkTarget": null,
-                      "showIcon": true
-                    }
-                  }
-                ],
-                "hierarchySettings": {
-                  "treeType": 1,
-                  "groupBy": [
-                    "subscriptionId"
-                  ],
-                  "expandTopLevel": true
+                  "customWidth": "33",
+                  "name": "Consumed Cores per VMSS"
                 }
-              }
+              ]
             },
-            "conditionalVisibility": {
-              "parameterName": "VMSSAHUBEnabled",
-              "comparison": "isEqualTo",
-              "value": "Yes"
-            },
-            "name": "VMSS+SKU+vCores-AHUB"
+            "name": "VMSS RG Overview"
           },
           {
-            "type": 3,
+            "type": 12,
             "content": {
-              "version": "KqlItem/1.0",
-              "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"50d79765-aad4-437e-a90b-8cc7865e7081\",\"mergeType\":\"inner\",\"leftTable\":\"VMSS-AHUB-Disabled-Tag\",\"rightTable\":\"API-Get_VM_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[query - 0].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[query - 0].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[Added column]\",\"mergedName\":\"Prioritize AHUB?\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\">=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"static\",\"resultVal\":\"High Priority\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"static\",\"resultVal\":\"Low Priority\"}}]},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].WindowsId\",\"mergedName\":\"VMSS Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[query - 0].VMName\"},{\"originalName\":\"[query - 0].VMSSize\"},{\"originalName\":\"[query - Get VM vCPU].Name\"},{\"originalName\":\"[query - Get VM vCPU].MemoryGB\"},{\"originalName\":\"[query - Get VM vCPU].MaxNetworkInterfaces\"},{\"originalName\":\"[query - Get VM vCPU].HyperVGenerations\"},{\"originalName\":\"[query - Get VM vCPU].vCPUsPerCore\"},{\"originalName\":\"[VMSS-AHUB-Disabled].VMName\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMSize\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMName\"}]}",
-              "size": 0,
-              "title": "VMSS without AHUB",
-              "noDataMessage": "All of your VMSS have AHUB enabled",
-              "noDataMessageStyle": 3,
-              "showExportToExcel": true,
-              "queryType": 7,
-              "gridSettings": {
-                "formatters": [
-                  {
-                    "columnMatch": "$gen_group",
-                    "formatter": 15,
-                    "formatOptions": {
-                      "linkTarget": null,
-                      "showIcon": true
-                    }
+              "version": "NotebookGroup/1.0",
+              "groupType": "editable",
+              "loadType": "explicit",
+              "loadButtonText": "Load VMSS AHUB Details",
+              "items": [
+                {
+                  "type": 9,
+                  "content": {
+                    "version": "KqlParameterItem/1.0",
+                    "parameters": [
+                      {
+                        "id": "ae5e8765-47ef-46a6-803b-6b7124c098d2",
+                        "version": "KqlParameterItem/1.0",
+                        "name": "VMSSAHUBEnabled",
+                        "label": "See VMSS with AHUB",
+                        "type": 2,
+                        "isRequired": true,
+                        "typeSettings": {
+                          "additionalResourceOptions": [],
+                          "showDefault": false
+                        },
+                        "jsonData": "[\r\n    {\"value\":\"Yes\"},\r\n    {\"value\":\"No\", \"selected\":true}\r\n]\r\n\r\n",
+                        "timeContext": {
+                          "durationMs": 86400000
+                        },
+                        "value": "Yes"
+                      },
+                      {
+                        "id": "f1ac5e53-253c-4afb-8bc5-b1ba2efea3eb",
+                        "version": "KqlParameterItem/1.0",
+                        "name": "VMSSAHUBDisabled",
+                        "label": "See VMSS without AHUB",
+                        "type": 2,
+                        "isRequired": true,
+                        "typeSettings": {
+                          "additionalResourceOptions": [],
+                          "showDefault": false
+                        },
+                        "jsonData": "[\r\n    {\"value\":\"Yes\"},\r\n    {\"value\":\"No\", \"selected\":true}\r\n]\r\n\r\n",
+                        "value": "Yes"
+                      }
+                    ],
+                    "style": "pills",
+                    "queryType": 0,
+                    "resourceType": "microsoft.operationalinsights/workspaces"
                   },
-                  {
-                    "columnMatch": "Group",
-                    "formatter": 15,
-                    "formatOptions": {
-                      "linkTarget": null,
-                      "showIcon": true
-                    }
-                  },
-                  {
-                    "columnMatch": "Prioritize AHUB?",
-                    "formatter": 18,
-                    "formatOptions": {
-                      "thresholdsOptions": "icons",
-                      "thresholdsGrid": [
+                  "name": "parameters - 13"
+                },
+                {
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"50d79765-aad4-437e-a90b-8cc7865e7081\",\"mergeType\":\"inner\",\"leftTable\":\"VMSSAHUBEnabled-Tag\",\"rightTable\":\"API-Get_VM_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[WindowsAHUBEnabled].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[Added column]\",\"mergedName\":\"Prioritize AHUB?\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\">=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"static\",\"resultVal\":\"High Priority\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"static\",\"resultVal\":\"Low Priority\"}}]},{\"originalName\":\"[Added column]\",\"mergedName\":\"Consumed Cores per VM\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\"<=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"8\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\"([\\\"vCPUs\\\"] + 7) & ~7\"}}]},{\"originalName\":\"[VMSSAHUBEnabled-Tag].WindowsId\",\"mergedName\":\"VMSS Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].OSVersion\",\"mergedName\":\"OSVersion\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[query - 0].VMName\"},{\"originalName\":\"[query - 0].VMSSize\"},{\"originalName\":\"[query - Get VM vCPU].Name\"},{\"originalName\":\"[query - Get VM vCPU].MemoryGB\"},{\"originalName\":\"[query - Get VM vCPU].MaxNetworkInterfaces\"},{\"originalName\":\"[query - Get VM vCPU].HyperVGenerations\"},{\"originalName\":\"[query - Get VM vCPU].vCPUsPerCore\"},{\"originalName\":\"[WindowsAHUBEnabled].VMSSize\"},{\"originalName\":\"[WindowsAHUBEnabled].VMName\"},{\"originalName\":\"[VMSSAHUBEnabled].VMSize\"},{\"originalName\":\"[VMSSAHUBEnabled].VMName\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMName\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSize\"}]}",
+                    "size": 0,
+                    "title": "VMSS with AHUB",
+                    "noDataMessage": "None of your VMSS have AHUB enabled",
+                    "noDataMessageStyle": 4,
+                    "showExportToExcel": true,
+                    "queryType": 7,
+                    "gridSettings": {
+                      "formatters": [
                         {
-                          "operator": "==",
-                          "thresholdValue": "High Priority",
-                          "representation": "Sev0",
-                          "text": "{0}{1}"
+                          "columnMatch": "$gen_group",
+                          "formatter": 15,
+                          "formatOptions": {
+                            "linkTarget": null,
+                            "showIcon": true
+                          }
                         },
                         {
-                          "operator": "Default",
-                          "thresholdValue": null,
-                          "representation": "Sev4",
-                          "text": "{0}{1}"
+                          "columnMatch": "Group",
+                          "formatter": 15,
+                          "formatOptions": {
+                            "linkTarget": null,
+                            "showIcon": true
+                          }
+                        },
+                        {
+                          "columnMatch": "Prioritize AHUB?",
+                          "formatter": 18,
+                          "formatOptions": {
+                            "thresholdsOptions": "icons",
+                            "thresholdsGrid": [
+                              {
+                                "operator": "==",
+                                "thresholdValue": "High Priority",
+                                "representation": "Sev0",
+                                "text": "{0}{1}"
+                              },
+                              {
+                                "operator": "Default",
+                                "thresholdValue": null,
+                                "representation": "2",
+                                "text": "{0}{1}"
+                              }
+                            ]
+                          },
+                          "numberFormat": {
+                            "unit": 17,
+                            "options": {
+                              "style": "decimal"
+                            }
+                          }
+                        },
+                        {
+                          "columnMatch": "subscriptionId",
+                          "formatter": 15,
+                          "formatOptions": {
+                            "linkTarget": null,
+                            "showIcon": true
+                          }
+                        },
+                        {
+                          "columnMatch": "Subscription Name",
+                          "formatter": 15,
+                          "formatOptions": {
+                            "linkTarget": null,
+                            "showIcon": true
+                          }
                         }
-                      ]
-                    },
-                    "numberFormat": {
-                      "unit": 17,
-                      "options": {
-                        "style": "decimal"
+                      ],
+                      "hierarchySettings": {
+                        "treeType": 1,
+                        "groupBy": [
+                          "subscriptionId"
+                        ],
+                        "expandTopLevel": true
                       }
                     }
-                  }
-                ],
-                "hierarchySettings": {
-                  "treeType": 1,
-                  "groupBy": [
-                    "subscriptionId"
-                  ],
-                  "expandTopLevel": true
+                  },
+                  "conditionalVisibility": {
+                    "parameterName": "VMSSAHUBEnabled",
+                    "comparison": "isEqualTo",
+                    "value": "Yes"
+                  },
+                  "name": "VMSS+SKU+vCores-AHUB"
+                },
+                {
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"50d79765-aad4-437e-a90b-8cc7865e7081\",\"mergeType\":\"inner\",\"leftTable\":\"VMSS-AHUB-Disabled-Tag\",\"rightTable\":\"API-Get_VMSS_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[query - 0].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[query - 0].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[Added column]\",\"mergedName\":\"Prioritize AHUB?\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\">=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"static\",\"resultVal\":\"High Priority\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"static\",\"resultVal\":\"Low Priority\"}}]},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].WindowsId\",\"mergedName\":\"WindowsId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VMSS_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[query - 0].VMName\"},{\"originalName\":\"[query - 0].VMSSize\"},{\"originalName\":\"[query - Get VM vCPU].Name\"},{\"originalName\":\"[query - Get VM vCPU].MemoryGB\"},{\"originalName\":\"[query - Get VM vCPU].MaxNetworkInterfaces\"},{\"originalName\":\"[query - Get VM vCPU].HyperVGenerations\"},{\"originalName\":\"[query - Get VM vCPU].vCPUsPerCore\"},{\"originalName\":\"[VMSS-AHUB-Disabled].VMName\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMSize\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMName\"}]}",
+                    "size": 0,
+                    "title": "VMSS without AHUB",
+                    "noDataMessage": "All of your VMSS have AHUB enabled",
+                    "noDataMessageStyle": 3,
+                    "showExportToExcel": true,
+                    "queryType": 7,
+                    "gridSettings": {
+                      "formatters": [
+                        {
+                          "columnMatch": "$gen_group",
+                          "formatter": 15,
+                          "formatOptions": {
+                            "linkTarget": null,
+                            "showIcon": true
+                          }
+                        },
+                        {
+                          "columnMatch": "Group",
+                          "formatter": 15,
+                          "formatOptions": {
+                            "linkTarget": null,
+                            "showIcon": true
+                          }
+                        },
+                        {
+                          "columnMatch": "Prioritize AHUB?",
+                          "formatter": 18,
+                          "formatOptions": {
+                            "thresholdsOptions": "icons",
+                            "thresholdsGrid": [
+                              {
+                                "operator": "==",
+                                "thresholdValue": "High Priority",
+                                "representation": "Sev0",
+                                "text": "{0}{1}"
+                              },
+                              {
+                                "operator": "Default",
+                                "thresholdValue": null,
+                                "representation": "Sev4",
+                                "text": "{0}{1}"
+                              }
+                            ]
+                          },
+                          "numberFormat": {
+                            "unit": 17,
+                            "options": {
+                              "style": "decimal"
+                            }
+                          }
+                        }
+                      ],
+                      "hierarchySettings": {
+                        "treeType": 1,
+                        "groupBy": [
+                          "subscriptionId"
+                        ],
+                        "expandTopLevel": true
+                      }
+                    }
+                  },
+                  "conditionalVisibility": {
+                    "parameterName": "VMSSAHUBDisabled",
+                    "comparison": "isEqualTo",
+                    "value": "Yes"
+                  },
+                  "name": "VMSS+SKU+vCores"
                 }
-              }
+              ]
             },
-            "conditionalVisibility": {
-              "parameterName": "VMSSAHUBDisabled",
-              "comparison": "isEqualTo",
-              "value": "Yes"
-            },
-            "name": "VMSS+SKU+vCores"
+            "name": "VMSS RG Details"
           }
         ]
       },
-      "conditionalVisibility": {
-        "parameterName": "SelectedSubTab",
-        "comparison": "isEqualTo",
-        "value": "VMSS"
+      "conditionalVisibilities": [
+        {
+          "parameterName": "SelectedSubTab",
+          "comparison": "isEqualTo",
+          "value": "VMSS"
+        },
+        {
+          "parameterName": "SelectedTab",
+          "comparison": "isEqualTo",
+          "value": "VM"
+        },
+        {
+          "parameterName": "RG_Filter",
+          "comparison": "isEqualTo",
+          "value": "Tags"
+        }
+      ],
+      "name": "VMSS-Tag"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "title": "VMSS",
+        "items": [
+          {
+            "type": 1,
+            "content": {
+              "json": "## Windows Azure Hybrid Benefit (AHUB) Overview - VM Scale Set"
+            },
+            "name": "text - 3"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "Each two-processor license or each set of 16-core licenses, either Datacenter or Standard editions, are entitled to two instances of up to 8 cores, or one instance of up to 16 cores.\r\n\r\nThe virtual machines (VMs) with less than 8 cores are categorized as **Low Priority**, while those with 8 or more cores are classified as **High Priority**. In situations where there are insufficient Azure Hybrid benefit licenses to cover all the VMs in the environment, it is recommended to prioritize the High Priority VMs.",
+              "style": "info"
+            },
+            "name": "text - 4"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "ResourceContainers | where type =~ 'Microsoft.Resources/subscriptions' | extend SubscriptionName=name \r\n| join (\r\nresources \r\n| where resourceGroup in ({ResourceGroup})\r\n| where type =~ 'microsoft.compute/virtualMachineScaleSets'\r\n| where tostring(properties.virtualMachineProfile.storageProfile.osDisk.osType) == 'Windows' and tostring(properties.virtualMachineProfile.licenseType) == \"Windows_Server\"\r\n| extend WindowsId=id, VMName=name, VMLocation=location, VMRG=resourceGroup, OSType=tostring(properties.virtualMachineProfile.storageProfile.osDisk.osType), OSVersion = tostring(properties.virtualMachineProfile.storageProfile.imageReference.sku), VMSize=tostring (properties.hardwareProfile.vmSize), LicenseType = tostring(properties.virtualMachineProfile.licenseType), VMSSize=tostring(sku.name)\r\n    ) on subscriptionId \r\n| order by type asc \r\n| project WindowsId,VMName,VMRG,VMSize, VMSSize, VMLocation,OSType, OSVersion,LicenseType, subscriptionId",
+              "size": 0,
+              "queryType": 1,
+              "resourceType": "microsoft.resourcegraph/resources",
+              "crossComponentResources": [
+                "{Subscription}"
+              ]
+            },
+            "conditionalVisibilities": [
+              {
+                "parameterName": "LoadVMSSTab",
+                "comparison": "isEqualTo",
+                "value": "Yes"
+              },
+              {
+                "parameterName": "AlwaysHidden",
+                "comparison": "isEqualTo",
+                "value": "True"
+              }
+            ],
+            "name": "VMSSAHUBEnabled-RG"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "ResourceContainers | where type =~ 'Microsoft.Resources/subscriptions' | extend SubscriptionName=name \r\n| join (\r\nresources \r\n| where resourceGroup in ({ResourceGroup})\r\n| where type =~ 'microsoft.compute/virtualMachineScaleSets'\r\n| where tostring(properties.storageProfile.osDisk.osType) == 'Windows' or tostring(properties.virtualMachineProfile.storageProfile.osDisk.osType) == 'Windows'\r\n| where tostring(properties.['licenseType']) !has 'Windows' and tostring(properties.virtualMachineProfile.['licenseType']) !has 'Windows'\r\n| extend WindowsId=id, VMName=name, VMLocation=location, VMRG=resourceGroup, OSType=tostring(properties.virtualMachineProfile.storageProfile.osDisk.osType), OsVersion = tostring(properties.virtualMachineProfile.storageProfile.imageReference.sku), VMSize=tostring (properties.hardwareProfile.vmSize), LicenseType = tostring(properties.virtualMachineProfile.licenseType), VMSSize=tostring(sku.name)\r\n    ) on subscriptionId \r\n| order by type asc \r\n| project WindowsId,VMName,VMRG,VMSize, VMSSize, VMLocation,OSType, OsVersion,LicenseType, subscriptionId",
+              "size": 0,
+              "queryType": 1,
+              "resourceType": "microsoft.resourcegraph/resources",
+              "crossComponentResources": [
+                "{Subscription}"
+              ]
+            },
+            "conditionalVisibilities": [
+              {
+                "parameterName": "LoadVMSSTab",
+                "comparison": "isEqualTo",
+                "value": "Yes"
+              },
+              {
+                "parameterName": "AlwaysHidden",
+                "comparison": "isEqualTo",
+                "value": "True"
+              }
+            ],
+            "name": "VMSSAHUBDisabled-RG"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "### Consumed Licenses\r\nTotal number of Windows licenses cores consumed by all Windows virtual machines.\r\n",
+              "style": "info"
+            },
+            "customWidth": "50",
+            "name": "text - 6"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "### Number of required Cores to enable Windows Azure Hybrid Benefit\r\nNumber of cores required to enable AHUB across the entire environment.",
+              "style": "info"
+            },
+            "customWidth": "50",
+            "name": "text - 7"
+          },
+          {
+            "type": 12,
+            "content": {
+              "version": "NotebookGroup/1.0",
+              "groupType": "editable",
+              "loadType": "explicit",
+              "items": [
+                {
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"50d79765-aad4-437e-a90b-8cc7865e7081\",\"mergeType\":\"inner\",\"leftTable\":\"VMSSAHUBEnabled-RG\",\"rightTable\":\"API-Get_VM_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[Added column]\",\"mergedName\":\"Prioritize AHUB?\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\">=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"\\\"High Priority\\\"\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\"\\\"Low Priority\\\"\"}}]},{\"originalName\":\"[Added column]\",\"mergedName\":\"Consumed Cores per VM\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\"<=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"8\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\" ([\\\"vCPUs\\\"] + 7) & ~7\"}}]},{\"originalName\":\"[query - 0].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].WindowsId\",\"mergedName\":\"WindowsId\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].OSVersion\",\"mergedName\":\"OSVersion\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[API-Get_VM_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"unknown\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"unknown\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"unknown\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"unknown\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"unknown\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"unknown\"},{\"originalName\":\"[WindowsAHUBEnabled].WindowsId\"},{\"originalName\":\"[WindowsAHUBEnabled].VMRG\"},{\"originalName\":\"[WindowsAHUBEnabled].VMLocation\"},{\"originalName\":\"[WindowsAHUBEnabled].OSType\"},{\"originalName\":\"[WindowsAHUBEnabled].OsVersion\"},{\"originalName\":\"[WindowsAHUBEnabled].LicenseType\"},{\"originalName\":\"[query - Get VM vCPU].Name\"},{\"originalName\":\"[query - Get VM vCPU].MemoryGB\"},{\"originalName\":\"[query - Get VM vCPU].MaxNetworkInterfaces\"},{\"originalName\":\"[query - Get VM vCPU].HyperVGenerations\"},{\"originalName\":\"[query - Get VM vCPU].vCPUsPerCore\"},{\"originalName\":\"[WindowsAHUBEnabled].VMSSize\"}]}",
+                    "size": 0,
+                    "title": "Cores not enabled per AHUB Priority",
+                    "noDataMessage": "All of your VMs have AHUB enabled",
+                    "noDataMessageStyle": 4,
+                    "showRefreshButton": true,
+                    "queryType": 7,
+                    "visualization": "piechart",
+                    "gridSettings": {
+                      "formatters": [
+                        {
+                          "columnMatch": "Prioritize AHUB?",
+                          "formatter": 18,
+                          "formatOptions": {
+                            "thresholdsOptions": "icons",
+                            "thresholdsGrid": [
+                              {
+                                "operator": "==",
+                                "thresholdValue": "High Priority",
+                                "representation": "Sev0",
+                                "text": "{0}{1}"
+                              },
+                              {
+                                "operator": "Default",
+                                "thresholdValue": null,
+                                "representation": "Sev4",
+                                "text": "{0}{1}"
+                              }
+                            ]
+                          },
+                          "numberFormat": {
+                            "unit": 17,
+                            "options": {
+                              "style": "decimal"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "chartSettings": {
+                      "yAxis": [
+                        "Consumed Cores per VM"
+                      ],
+                      "group": "Prioritize AHUB?",
+                      "createOtherGroup": null
+                    }
+                  },
+                  "customWidth": "33",
+                  "name": "Cores NOT enabled per AHUB Priority"
+                },
+                {
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"50d79765-aad4-437e-a90b-8cc7865e7081\",\"mergeType\":\"inner\",\"leftTable\":\"VMSSAHUBEnabled-RG\",\"rightTable\":\"API-Get_VM_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[Added column]\",\"mergedName\":\"Prioritize AHUB?\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\">=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"\\\"High Priority\\\"\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\"\\\"Low Priority\\\"\"}}]},{\"originalName\":\"[Added column]\",\"mergedName\":\"Consumed Cores per VM\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\"<=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"8\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\" ([\\\"vCPUs\\\"] + 7) & ~7\"}}]},{\"originalName\":\"[WindowsAHUBEnabled].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].WindowsId\",\"mergedName\":\"WindowsId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].OSVersion\",\"mergedName\":\"OSVersion\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[WindowsAHUBEnabled].WindowsId\"},{\"originalName\":\"[WindowsAHUBEnabled].VMRG\"},{\"originalName\":\"[WindowsAHUBEnabled].VMLocation\"},{\"originalName\":\"[WindowsAHUBEnabled].OSType\"},{\"originalName\":\"[WindowsAHUBEnabled].OsVersion\"},{\"originalName\":\"[WindowsAHUBEnabled].LicenseType\"},{\"originalName\":\"[query - Get VM vCPU].Name\"},{\"originalName\":\"[query - Get VM vCPU].MemoryGB\"},{\"originalName\":\"[query - Get VM vCPU].MaxNetworkInterfaces\"},{\"originalName\":\"[query - Get VM vCPU].HyperVGenerations\"},{\"originalName\":\"[query - Get VM vCPU].vCPUsPerCore\"},{\"originalName\":\"[WindowsAHUBEnabled].VMSSize\"}]}",
+                    "size": 0,
+                    "title": "Consumed Cores per AHUB Priority",
+                    "noDataMessage": "None of your VMs have AHUB enabled",
+                    "noDataMessageStyle": 4,
+                    "showRefreshButton": true,
+                    "queryType": 7,
+                    "visualization": "piechart",
+                    "gridSettings": {
+                      "formatters": [
+                        {
+                          "columnMatch": "Prioritize AHUB?",
+                          "formatter": 18,
+                          "formatOptions": {
+                            "thresholdsOptions": "icons",
+                            "thresholdsGrid": [
+                              {
+                                "operator": "==",
+                                "thresholdValue": "High Priority",
+                                "representation": "Sev0",
+                                "text": "{0}{1}"
+                              },
+                              {
+                                "operator": "Default",
+                                "thresholdValue": null,
+                                "representation": "Sev4",
+                                "text": "{0}{1}"
+                              }
+                            ]
+                          },
+                          "numberFormat": {
+                            "unit": 17,
+                            "options": {
+                              "style": "decimal"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "customWidth": "33",
+                  "name": "Consumed Cores per AHUB Priority"
+                },
+                {
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"d8deb22b-a596-43ee-acc4-180849d26130\",\"mergeType\":\"inner\",\"leftTable\":\"VMSSAHUBEnabled-RG\",\"rightTable\":\"API-Get_VM_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[Added column]\",\"mergedName\":\"ConsumedCores\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\"<=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"8\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\"([\\\"vCPUs\\\"] + 7) & ~7\"}}]},{\"originalName\":\"[WindowsAHUBEnabled].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].WindowsId\",\"mergedName\":\"WindowsId\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].OSVersion\",\"mergedName\":\"OSVersion\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VM_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"d8deb22b-a596-43ee-acc4-180849d26130\"}]}",
+                    "size": 0,
+                    "title": "Consumed Cores per VMSS",
+                    "showRefreshButton": true,
+                    "queryType": 7,
+                    "visualization": "piechart",
+                    "gridSettings": {
+                      "formatters": [
+                        {
+                          "columnMatch": "ConsumedCores",
+                          "formatter": 0,
+                          "formatOptions": {
+                            "aggregation": "Sum"
+                          }
+                        }
+                      ]
+                    },
+                    "tileSettings": {
+                      "titleContent": {},
+                      "leftContent": {
+                        "columnMatch": "ConsumedCores",
+                        "formatter": 12,
+                        "formatOptions": {
+                          "palette": "blue"
+                        }
+                      },
+                      "showBorder": false
+                    },
+                    "graphSettings": {
+                      "type": 0
+                    },
+                    "chartSettings": {
+                      "yAxis": [
+                        "ConsumedCores"
+                      ],
+                      "group": "VMName",
+                      "createOtherGroup": null
+                    }
+                  },
+                  "customWidth": "33",
+                  "name": "Consumed Cores per VMSS"
+                }
+              ]
+            },
+            "name": "VMSS RG Overview"
+          },
+          {
+            "type": 12,
+            "content": {
+              "version": "NotebookGroup/1.0",
+              "groupType": "editable",
+              "items": [
+                {
+                  "type": 9,
+                  "content": {
+                    "version": "KqlParameterItem/1.0",
+                    "parameters": [
+                      {
+                        "id": "ae5e8765-47ef-46a6-803b-6b7124c098d2",
+                        "version": "KqlParameterItem/1.0",
+                        "name": "VMSSAHUBEnabled",
+                        "label": "See VMSS with AHUB",
+                        "type": 2,
+                        "isRequired": true,
+                        "typeSettings": {
+                          "additionalResourceOptions": [],
+                          "showDefault": false
+                        },
+                        "jsonData": "[\r\n    {\"value\":\"Yes\"},\r\n    {\"value\":\"No\", \"selected\":true}\r\n]\r\n\r\n",
+                        "timeContext": {
+                          "durationMs": 86400000
+                        }
+                      },
+                      {
+                        "id": "f1ac5e53-253c-4afb-8bc5-b1ba2efea3eb",
+                        "version": "KqlParameterItem/1.0",
+                        "name": "VMSSAHUBDisabled",
+                        "label": "See VMSS without AHUB",
+                        "type": 2,
+                        "isRequired": true,
+                        "typeSettings": {
+                          "additionalResourceOptions": [],
+                          "showDefault": false
+                        },
+                        "jsonData": "[\r\n    {\"value\":\"Yes\"},\r\n    {\"value\":\"No\", \"selected\":true}\r\n]\r\n\r\n"
+                      }
+                    ],
+                    "style": "pills",
+                    "queryType": 0,
+                    "resourceType": "microsoft.operationalinsights/workspaces"
+                  },
+                  "name": "parameters - 13"
+                },
+                {
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"50d79765-aad4-437e-a90b-8cc7865e7081\",\"mergeType\":\"inner\",\"leftTable\":\"VMSSAHUBEnabled-RG\",\"rightTable\":\"API-Get_VM_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[WindowsAHUBEnabled].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[Added column]\",\"mergedName\":\"Prioritize AHUB?\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\">=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"static\",\"resultVal\":\"High Priority\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"static\",\"resultVal\":\"Low Priority\"}}]},{\"originalName\":\"[Added column]\",\"mergedName\":\"Consumed Cores per VM\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\"<=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"expression\",\"resultVal\":\"8\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"expression\",\"resultVal\":\"([\\\"vCPUs\\\"] + 7) & ~7\"}}]},{\"originalName\":\"[VMSSAHUBEnabled-RG].WindowsId\",\"mergedName\":\"WindowsId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].OSVersion\",\"mergedName\":\"OSVersion\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBEnabled-RG].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[query - 0].VMName\"},{\"originalName\":\"[query - 0].VMSSize\"},{\"originalName\":\"[query - Get VM vCPU].Name\"},{\"originalName\":\"[query - Get VM vCPU].MemoryGB\"},{\"originalName\":\"[query - Get VM vCPU].MaxNetworkInterfaces\"},{\"originalName\":\"[query - Get VM vCPU].HyperVGenerations\"},{\"originalName\":\"[query - Get VM vCPU].vCPUsPerCore\"},{\"originalName\":\"[WindowsAHUBEnabled].VMSSize\"},{\"originalName\":\"[WindowsAHUBEnabled].VMName\"},{\"originalName\":\"[VMSSAHUBEnabled].VMSize\"},{\"originalName\":\"[VMSSAHUBEnabled].VMName\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMName\"},{\"originalName\":\"[VMSSAHUBEnabled-Tag].VMSize\"}]}",
+                    "size": 0,
+                    "title": "VMSS with AHUB",
+                    "noDataMessage": "None of your VMSS have AHUB enabled",
+                    "noDataMessageStyle": 4,
+                    "showExportToExcel": true,
+                    "queryType": 7,
+                    "gridSettings": {
+                      "formatters": [
+                        {
+                          "columnMatch": "$gen_group",
+                          "formatter": 15,
+                          "formatOptions": {
+                            "linkTarget": null,
+                            "showIcon": true
+                          }
+                        },
+                        {
+                          "columnMatch": "Group",
+                          "formatter": 15,
+                          "formatOptions": {
+                            "linkTarget": null,
+                            "showIcon": true
+                          }
+                        },
+                        {
+                          "columnMatch": "Prioritize AHUB?",
+                          "formatter": 18,
+                          "formatOptions": {
+                            "thresholdsOptions": "icons",
+                            "thresholdsGrid": [
+                              {
+                                "operator": "==",
+                                "thresholdValue": "High Priority",
+                                "representation": "Sev0",
+                                "text": "{0}{1}"
+                              },
+                              {
+                                "operator": "Default",
+                                "thresholdValue": null,
+                                "representation": "2",
+                                "text": "{0}{1}"
+                              }
+                            ]
+                          },
+                          "numberFormat": {
+                            "unit": 17,
+                            "options": {
+                              "style": "decimal"
+                            }
+                          }
+                        },
+                        {
+                          "columnMatch": "subscriptionId",
+                          "formatter": 15,
+                          "formatOptions": {
+                            "linkTarget": null,
+                            "showIcon": true
+                          }
+                        },
+                        {
+                          "columnMatch": "Subscription Name",
+                          "formatter": 15,
+                          "formatOptions": {
+                            "linkTarget": null,
+                            "showIcon": true
+                          }
+                        }
+                      ],
+                      "hierarchySettings": {
+                        "treeType": 1,
+                        "groupBy": [
+                          "subscriptionId"
+                        ],
+                        "expandTopLevel": true
+                      }
+                    }
+                  },
+                  "conditionalVisibility": {
+                    "parameterName": "VMSSAHUBEnabled",
+                    "comparison": "isEqualTo",
+                    "value": "Yes"
+                  },
+                  "name": "VMSS+SKU+vCores-AHUB"
+                },
+                {
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"50d79765-aad4-437e-a90b-8cc7865e7081\",\"mergeType\":\"inner\",\"leftTable\":\"VMSSAHUBDisabled-RG\",\"rightTable\":\"API-Get_VM_SKU\",\"leftColumn\":\"VMSSize\",\"rightColumn\":\"Name\"}],\"projectRename\":[{\"originalName\":\"[query - 0].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[query - 0].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"unknown\"},{\"originalName\":\"[Added column]\",\"mergedName\":\"Prioritize AHUB?\",\"fromId\":null,\"isNewItem\":true,\"newItemData\":[{\"criteriaContext\":{\"leftOperand\":\"vCPUs\",\"operator\":\">=\",\"rightValType\":\"static\",\"rightVal\":\"8\",\"resultValType\":\"static\",\"resultVal\":\"High Priority\"}},{\"criteriaContext\":{\"operator\":\"Default\",\"rightValType\":\"column\",\"resultValType\":\"static\",\"resultVal\":\"Low Priority\"}}]},{\"originalName\":\"[VMSSAHUBDisabled-RG].WindowsId\",\"mergedName\":\"WindowsId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBDisabled-RG].VMName\",\"mergedName\":\"VMName\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBDisabled-RG].VMRG\",\"mergedName\":\"VMRG\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBDisabled-RG].VMSize\",\"mergedName\":\"VMSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBDisabled-RG].VMSSize\",\"mergedName\":\"VMSSize\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBDisabled-RG].VMLocation\",\"mergedName\":\"VMLocation\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBDisabled-RG].OSType\",\"mergedName\":\"OSType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBDisabled-RG].OsVersion\",\"mergedName\":\"OsVersion\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBDisabled-RG].LicenseType\",\"mergedName\":\"LicenseType\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[VMSSAHUBDisabled-RG].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].Name\",\"mergedName\":\"Name\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUs\",\"mergedName\":\"vCPUs\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MemoryGB\",\"mergedName\":\"MemoryGB\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].MaxNetworkInterfaces\",\"mergedName\":\"MaxNetworkInterfaces\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].HyperVGenerations\",\"mergedName\":\"HyperVGenerations\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[API-Get_VM_SKU].vCPUsPerCore\",\"mergedName\":\"vCPUsPerCore\",\"fromId\":\"50d79765-aad4-437e-a90b-8cc7865e7081\"},{\"originalName\":\"[query - 0].VMName\"},{\"originalName\":\"[query - 0].VMSSize\"},{\"originalName\":\"[query - Get VM vCPU].Name\"},{\"originalName\":\"[query - Get VM vCPU].MemoryGB\"},{\"originalName\":\"[query - Get VM vCPU].MaxNetworkInterfaces\"},{\"originalName\":\"[query - Get VM vCPU].HyperVGenerations\"},{\"originalName\":\"[query - Get VM vCPU].vCPUsPerCore\"},{\"originalName\":\"[VMSS-AHUB-Disabled].VMName\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMSize\"},{\"originalName\":\"[VMSS-AHUB-Disabled-Tag].VMName\"}]}",
+                    "size": 0,
+                    "title": "VMSS without AHUB",
+                    "noDataMessage": "All of your VMSS have AHUB enabled",
+                    "noDataMessageStyle": 3,
+                    "showExportToExcel": true,
+                    "queryType": 7,
+                    "gridSettings": {
+                      "formatters": [
+                        {
+                          "columnMatch": "$gen_group",
+                          "formatter": 15,
+                          "formatOptions": {
+                            "linkTarget": null,
+                            "showIcon": true
+                          }
+                        },
+                        {
+                          "columnMatch": "Group",
+                          "formatter": 15,
+                          "formatOptions": {
+                            "linkTarget": null,
+                            "showIcon": true
+                          }
+                        },
+                        {
+                          "columnMatch": "Prioritize AHUB?",
+                          "formatter": 18,
+                          "formatOptions": {
+                            "thresholdsOptions": "icons",
+                            "thresholdsGrid": [
+                              {
+                                "operator": "==",
+                                "thresholdValue": "High Priority",
+                                "representation": "Sev0",
+                                "text": "{0}{1}"
+                              },
+                              {
+                                "operator": "Default",
+                                "thresholdValue": null,
+                                "representation": "Sev4",
+                                "text": "{0}{1}"
+                              }
+                            ]
+                          },
+                          "numberFormat": {
+                            "unit": 17,
+                            "options": {
+                              "style": "decimal"
+                            }
+                          }
+                        }
+                      ],
+                      "hierarchySettings": {
+                        "treeType": 1,
+                        "groupBy": [
+                          "subscriptionId"
+                        ],
+                        "expandTopLevel": true
+                      }
+                    }
+                  },
+                  "conditionalVisibility": {
+                    "parameterName": "VMSSAHUBDisabled",
+                    "comparison": "isEqualTo",
+                    "value": "Yes"
+                  },
+                  "name": "VMSS+SKU+vCores"
+                }
+              ]
+            },
+            "name": "VMSS RG Details"
+          }
+        ]
       },
-      "name": "VMSS"
+      "conditionalVisibilities": [
+        {
+          "parameterName": "SelectedSubTab",
+          "comparison": "isEqualTo",
+          "value": "VMSS"
+        },
+        {
+          "parameterName": "SelectedTab",
+          "comparison": "isEqualTo",
+          "value": "VM"
+        },
+        {
+          "parameterName": "RG_Filter",
+          "comparison": "isEqualTo",
+          "value": "Resource Group"
+        }
+      ],
+      "name": "VMSS-RG"
     }
   ],
   "fallbackResourceIds": [
