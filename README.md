@@ -93,6 +93,12 @@ In this tab, you can see the list of SQL Databases, SQL Managed Instances and SQ
 
 ![VMSSOverview](https://github.com/arthurclares/AzureHybridBenefitWorkbook/raw/main/images/SQL%20Overview.jpg)
 
+## Known Issues
+
+Ocasionally, some of the Workbook queries can get stuck loading, if that happens, click in the workbook "refresh" button.
+
+![KnownIssue](https://github.com/arthurclares/AzureHybridBenefitWorkbook/raw/main/images/KnownIssue.jpg)
+
 
 ## Feedback and Suggestions
 
