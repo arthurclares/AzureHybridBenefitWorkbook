@@ -507,12 +507,13 @@
                     "size": 0,
                     "title": "Summary of Windows VMs with or without AHUB per Subscription",
                     "showRefreshButton": true,
+                    "showExportToExcel": true,
                     "queryType": 1,
                     "resourceType": "microsoft.resourcegraph/resources",
                     "crossComponentResources": [
                       "{Subscription}"
                     ],
-                    "visualization": "tiles",
+                    "visualization": "table",
                     "tileSettings": {
                       "titleContent": {
                         "columnMatch": "CheckAHUBWindows",
