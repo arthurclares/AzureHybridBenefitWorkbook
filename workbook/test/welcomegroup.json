@@ -1,0 +1,79 @@
+{
+  "type": 12,
+  "content": {
+    "version": "NotebookGroup/1.0",
+    "groupType": "editable",
+    "title": "Welcome",
+    "items": [
+      {
+        "type": 1,
+        "content": {
+          "json": "# Welcome to the Cost Optimization Workbook"
+        },
+        "name": "text - 6"
+      },
+      {
+        "type": 1,
+        "content": {
+          "json": "### Reference: [Microsoft Azure Well-Architected Framework - Cost Optimization Pillar](https://learn.microsoft.com/en-us/azure/architecture/framework/cost/overview)",
+          "style": "upsell"
+        },
+        "name": "text - 5"
+      },
+      {
+        "type": 1,
+        "content": {
+          "json": "The objective of this workbook is to provide an overview of the Cost posture of your Azure environment. The workbook is to be used as guidance only, and does not represent a guarantee of any Cost Reduction.\r\n\r\n## Overview of the cost optimization pillar\r\n\r\n* The cost optimization pillar provides principles for balancing business goals with budget justification to create a cost-effective workload while avoiding capital-intensive solutions. Cost optimization is about looking at ways to reduce unnecessary expenses and improve operational efficiencies.\r\n\r\n* To assess your workload using the tenets found in the [Microsoft Azure Well-Architected Framework](https://learn.microsoft.com/en-us/azure/architecture/framework/), reference the [Microsoft Azure Well-Architected Review](https://learn.microsoft.com/en-us/assessments/?id=azure-architecture-review&mode=pre-assessment&session=20dc50e4-5b71-4f38-bc49-51cc1d9f205c).\r\n\r\n\r\n\r\n\r\n"
+        },
+        "name": "text - 0"
+      },
+      {
+        "type": 1,
+        "content": {
+          "json": "Indicates an implemented feature that can result in a environment that is following the Cost Optimization & Cost Governance principles.",
+          "style": "success"
+        },
+        "customWidth": "50",
+        "name": "text - 1",
+        "styleSettings": {
+          "margin": "10px",
+          "showBorder": true
+        }
+      },
+      {
+        "type": 1,
+        "content": {
+          "json": "Indicates a feature that has not been implemented, and therefore should be reviewed",
+          "style": "warning"
+        },
+        "customWidth": "50",
+        "name": "text - 2",
+        "styleSettings": {
+          "margin": "10px",
+          "showBorder": true
+        }
+      },
+      {
+        "type": 1,
+        "content": {
+          "json": "## RBAC Needed\r\n\r\nThis workbook will present various cost-related details in the form of governance, networking, storage, VMs, Webapps, SQL, and cost information to educate the business about cost related to various resources.\r\n\r\n\r\n* Consider the following least-privilege (minimum) RBAC permissions when deploying the workbook:\r\n\r\n  * **Reader** , **Billing Reader** and **Workbook Contributor** : allows you to import the workbook, view all of the workbook tabs including the *Cost Information* tab and save the workbook in a resource group.\r\n  * **Reader** and **Workbook Contributor** : allows you to import the workbook, view all of the workbook tabs except the *Cost Information* tab and save the workbook in a resource group.\r\n  * **Reader** : allows you to import the workbook and view all of the workbook tabs except the *Cost Information* tab.\r\n\r\n\r\n"
+        },
+        "name": "text - 3"
+      },
+      {
+        "type": 1,
+        "content": {
+          "json": "  > The **Cost Information** tab only works with one subscription at the time.",
+          "style": "info"
+        },
+        "name": "text - 4"
+      }
+    ]
+  },
+  "conditionalVisibility": {
+    "parameterName": "SelectedTab",
+    "comparison": "isEqualTo",
+    "value": "Welcome"
+  },
+  "name": "Welcome"
+}
