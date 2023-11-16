@@ -1,3 +1,10 @@
+!!!
+
+This repository has been archived as this workbook code has been incorpoate into the Azure Advisor Cost Optimization workbook. 
+If you need to provide any feedback or suggestion, please use the Advisor workbook feedback link to do that. 
+
+!!!!
+
 
 # Azure Hybrid Benefit Workbook
 
